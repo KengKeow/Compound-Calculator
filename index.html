@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="description" content="A private, offline-first compound interest projection calculator with deposits, withdrawals, charts and exports.">
+  <title>COMPOUND. — Personal Finance Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Compound Studio">
+        <div class="brand-mark" aria-hidden="true"><span>C</span><span class="brand-dot">.</span></div>
+        <div class="brand-type"><strong>COMPOUND<span class="punctuation">.</span></strong><small>PERSONAL FINANCE STUDIO</small></div>
+      </div>
+      <div class="top-actions">
+        <div class="live-indicator"><span class="pulse"></span> OFFLINE & PRIVATE</div>
+        <button class="btn btn-ghost import-button" type="button" id="importButton" aria-label="Import scenario from JSON" title="Load a saved scenario">↥ <span>Import</span></button>
+        <button class="btn btn-primary" type="button" id="saveButton">↧ <span>Save scenario</span></button>
+        <input type="file" id="importFile" accept=".json,application/json" class="sr-only">
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="controls card" aria-labelledby="controlsHeading">
+        <div class="control-heading">
+          <div><div class="overline">01 / CONFIGURE</div><h2 id="controlsHeading">Your numbers<span class="punctuation">.</span></h2></div>
+          <button class="text-button" type="button" id="resetButton">Reset ↺</button>
+        </div>
+        <form id="calculatorForm" novalidate>
+          <div class="form-section">
+            <div class="section-title"><span>01</span> Starting point</div>
+            <div class="field">
+              <label for="currency">Currency</label>
+              <select id="currency" name="currency">
+                <option value="MYR">MYR · Malaysian Ringgit</option>
+                <option value="USD">USD · US Dollar</option>
+                <option value="SGD">SGD · Singapore Dollar</option>
+                <option value="EUR">EUR · Euro</option>
+                <option value="GBP">GBP · Pound Sterling</option>
+                <option value="JPY">JPY · Japanese Yen</option>
+                <option value="INR">INR · Indian Rupee</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="initial">Initial investment <span class="help" title="Your opening account balance">ⓘ</span></label>
+              <div class="input-with-prefix"><span class="currency-prefix" data-currency-symbol>RM</span><input id="initial" name="initial" type="number" min="0" max="1000000000000" step="100" value="10000" required></div>
+            </div>
+            <div class="field-pair">
+              <div class="field">
+                <label for="interestRate">Interest rate</label>
+                <div class="input-with-suffix"><input id="interestRate" name="interestRate" type="number" min="-90" max="100" step="0.1" value="5" required><span>%</span></div>
+              </div>
+              <div class="field">
+                <label for="ratePeriod">Rate is per</label>
+                <select id="ratePeriod" name="ratePeriod"><option value="yearly">Year</option><option value="monthly">Month</option></select>
+              </div>
+            </div>
+            <div class="field-pair">
+              <div class="field">
+                <label for="compound">Compounding</label>
+                <select id="compound" name="compound">
+                  <option value="365">Daily</option><option value="52">Weekly</option><option value="26">Fortnightly</option><option value="12" selected>Monthly</option><option value="4">Quarterly</option><option value="2">Half-yearly</option><option value="1">Yearly</option><option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="field" id="customWrap" hidden>
+                <label for="customCompound">Times per year</label>
+                <input id="customCompound" name="customCompound" type="number" min="1" max="365" step="1" value="24">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title"><span>02</span> Time horizon</div>
+            <div class="field-pair">
+              <div class="field"><label for="years">Years</label><input id="years" name="years" type="number" min="0" max="60" step="1" value="20" required></div>
+              <div class="field"><label for="months">Additional months</label><input id="months" name="months" type="number" min="0" max="11" step="1" value="0" required></div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title"><span>03</span> Money movement</div>
+            <label class="section-label" id="flowLabel">Regular contributions</label>
+            <div class="segmented segmented-four" role="group" aria-labelledby="flowLabel" id="flowTabs">
+              <button type="button" data-flow="none" aria-pressed="false">None</button>
+              <button type="button" data-flow="deposits" aria-pressed="true" class="active">Add</button>
+              <button type="button" data-flow="withdrawals" aria-pressed="false">Take</button>
+              <button type="button" data-flow="both" aria-pressed="false">Both</button>
+            </div>
+            <input type="hidden" id="flow" name="flow" value="deposits">
+            <div class="flow-box" id="depositFields">
+              <div class="mini-section-title">＋ Deposits</div>
+              <div class="field-pair">
+                <div class="field"><label for="deposit">Deposit amount</label><div class="input-with-prefix"><span data-currency-symbol>RM</span><input id="deposit" name="deposit" type="number" min="0" max="1000000000000" step="50" value="500"></div></div>
+                <div class="field"><label for="depositFreq">Frequency</label><select id="depositFreq" name="depositFreq"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option><option value="quarterly">Quarterly</option><option value="half-yearly">Half-yearly</option><option value="yearly">Yearly</option></select></div>
+              </div>
+              <div class="field"><label for="depositTiming">Deposit timing</label><select id="depositTiming" name="depositTiming"><option value="beginning">Beginning of period</option><option value="end" selected>End of period</option></select></div>
+              <div class="field-pair">
+                <div class="field"><label for="depositIncrease">Annual deposit increase</label><input id="depositIncrease" name="depositIncrease" type="number" min="-100" max="1000000000000" step="0.5" value="0"></div>
+                <div class="field"><label for="depositIncreaseType">Increase method</label><select id="depositIncreaseType" name="depositIncreaseType"><option value="percent">% per year</option><option value="amount">Fixed amount / year</option></select></div>
+              </div>
+            </div>
+            <div class="flow-box" id="withdrawalFields" hidden>
+              <div class="mini-section-title">− Withdrawals</div>
+              <div class="field-pair">
+                <div class="field"><label for="withdrawal">Withdrawal amount</label><div class="input-with-prefix"><span data-currency-symbol>RM</span><input id="withdrawal" name="withdrawal" type="number" min="0" max="1000000000000" step="50" value="250"></div></div>
+                <div class="field"><label for="withdrawalFreq">Frequency</label><select id="withdrawalFreq" name="withdrawalFreq"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option><option value="quarterly">Quarterly</option><option value="half-yearly">Half-yearly</option><option value="yearly">Yearly</option></select></div>
+              </div>
+              <div class="field"><label for="withdrawalTiming">Withdrawal timing</label><select id="withdrawalTiming" name="withdrawalTiming"><option value="beginning">Beginning of period</option><option value="end" selected>End of period</option></select></div>
+              <div class="field"><label for="withdrawalIncrease">Annual withdrawal increase (%)</label><div class="input-with-suffix"><input id="withdrawalIncrease" name="withdrawalIncrease" type="number" min="-100" max="1000" step="0.5" value="0"><span>%</span></div></div>
+            </div>
+          </div>
+
+          <div class="form-section last-section">
+            <div class="section-title"><span>04</span> Extra insights <span class="beta-label">BONUS</span></div>
+            <div class="field"><label for="goal">Savings goal</label><div class="input-with-prefix"><span data-currency-symbol>RM</span><input id="goal" name="goal" type="number" min="0" max="1000000000000" step="1000" value="250000"></div></div>
+            <div class="field"><label for="inflation">Estimated inflation / year</label><div class="input-with-suffix"><input id="inflation" name="inflation" type="number" min="-20" max="100" step="0.1" value="2.5"><span>%</span></div></div>
+            <p class="section-help">Inflation is used only for the optional purchasing-power view, not to change the investment return.</p>
+          </div>
+        </form>
+        <div id="validationMessage" class="validation" role="alert" hidden></div>
+        <div class="control-footer"><span class="lock-emoji">⌁</span> Your numbers stay in this browser. No accounts. No tracking.</div>
+      </aside>
+
+      <section class="dashboard" aria-labelledby="dashboardHeading">
+        <div class="dashboard-intro">
+          <div><div class="overline">02 / THE BIG PICTURE</div><h1 id="dashboardHeading">See the future of <em>your money.</em></h1><p>One number at a time. A projection you can actually explore.</p></div>
+          <div class="projection-tag"><span class="tag-star">✳</span><span id="durationLabel">20-YEAR PROJECTION</span></div>
+        </div>
+
+        <div class="stats-grid" aria-live="polite">
+          <article class="stat-card card stat-main"><div class="stat-label">PROJECTED FINAL BALANCE <span>↗</span></div><div class="stat-value" id="finalBalance">RM 0.00</div><div class="stat-bottom"><span class="stat-chip" id="balanceGrowth">+0%</span><span>vs. money paid in (net)</span></div></article>
+          <article class="stat-card card"><div class="stat-label">INTEREST EARNED <span>✴</span></div><div class="stat-value" id="interestEarned">RM 0.00</div><div class="stat-bottom muted" id="interestNote">Total credited return</div></article>
+          <article class="stat-card card"><div class="stat-label">TOTAL DEPOSITS <span>＋</span></div><div class="stat-value" id="totalDeposits">RM 0.00</div><div class="stat-bottom muted" id="depositNote">Excludes opening balance</div></article>
+          <article class="stat-card card"><div class="stat-label">TOTAL WITHDRAWN <span>−</span></div><div class="stat-value" id="totalWithdrawn">RM 0.00</div><div class="stat-bottom muted" id="withdrawalNote">Cash you've taken out</div></article>
+        </div>
+
+        <section class="chart-card card" aria-labelledby="chartHeading">
+          <div class="card-head chart-heading"><div><div class="overline">WEALTH OVER TIME</div><h2 id="chartHeading">Growth projection</h2></div><div class="head-actions"><div class="segmented" role="group" aria-label="Chart value type" id="chartModeButtons"><button type="button" data-view="nominal" aria-pressed="true" class="active">Future RM</button><button type="button" data-view="real" aria-pressed="false">Today's RM</button></div><button class="icon-button" id="downloadChart" title="Save chart as PNG" type="button" aria-label="Download chart as PNG">↧</button></div></div>
+          <div class="chart-legend"><span><i class="line-key solid"></i> Portfolio balance</span><span><i class="line-key dashed"></i> Net money paid in</span><span><i class="line-key dotted"></i> No regular contributions</span></div>
+          <div class="chart-area" id="chartArea"><canvas id="growthChart" role="img" aria-label="Line chart of projected portfolio balance, net contributions and growth with no recurring contributions">Your browser needs canvas to show this chart.</canvas><div id="chartTooltip" class="chart-tooltip" hidden></div></div>
+          <div class="chart-footer"><span><span class="tiny-dot"></span> Projection updates instantly</span><span id="chartModeHint">Nominal values, before inflation</span></div>
+        </section>
+
+        <div class="insight-grid">
+          <section class="insight-card card" aria-labelledby="insightsHeading"><div class="small-card-head"><div class="overline">AT A GLANCE</div><h3 id="insightsHeading">Your money, decoded.</h3></div>
+            <div class="insight-row"><span>Effective annual yield (APY)</span><strong id="apyValue">0.00%</strong></div>
+            <div class="insight-row"><span>Total profit / cash paid in</span><strong id="roiValue">0.00%</strong></div>
+            <div class="insight-row"><span>Net cash invested</span><strong id="netInvested">RM 0.00</strong></div>
+            <div class="insight-row"><span>Value in today's money</span><strong id="realValue">RM 0.00</strong></div>
+            <div class="insight-row"><span>Time to double (without cash flows)</span><strong id="doublingTime">—</strong></div>
+          </section>
+          <section class="insight-card card" aria-labelledby="goalHeading"><div class="small-card-head"><div class="overline">YOUR MILESTONE</div><h3 id="goalHeading">The finish line.</h3></div><div class="goal-title"><div id="goalAmount">RM 250,000</div><span id="goalStatus" class="goal-status">On the way</span></div><div class="progress-track" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="goalBar"><div id="goalProgress"></div></div><div class="goal-footer"><span id="goalPercent">0% of goal</span><strong id="goalWhen">—</strong></div><div class="goal-message" id="goalMessage">Set a goal to see when you might reach it.</div></section>
+        </div>
+
+        <section class="table-card card" aria-labelledby="tableHeading">
+          <div class="card-head"><div><div class="overline">THE FULL BREAKDOWN</div><h2 id="tableHeading">Every step, accounted for.</h2></div><div class="head-actions"><div class="segmented" id="tableModeButtons" role="group" aria-label="Table interval"><button type="button" data-table="monthly" aria-pressed="false">Monthly</button><button type="button" data-table="yearly" aria-pressed="true" class="active">Yearly</button></div><button id="exportCsv" class="btn btn-ghost btn-small" type="button">↓ CSV</button></div></div>
+          <div class="table-wrap" tabindex="0" aria-label="Projection breakdown table, scrollable"><table><thead><tr><th id="periodHead">Year</th><th>Deposits</th><th>Withdrawals</th><th>Interest</th><th>Net invested</th><th>Balance</th></tr></thead><tbody id="resultsTable"></tbody></table></div>
+          <div class="table-note"><span id="tableCount">Showing yearly figures</span><span>All amounts in your selected currency</span></div>
+        </section>
+        <footer class="site-footer"><span>COMPOUND. / Built for curiosity, not financial advice.</span><span>Calculated locally on your device · No internet required</span></footer>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
